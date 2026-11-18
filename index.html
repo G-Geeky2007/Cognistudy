@@ -20,6 +20,9 @@
   <!-- Canvas-Confetti for Quiz Celebrations -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+  <!-- PDF.js for Client-Side PDF Extraction Fallback -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
   <!-- App Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -300,10 +303,10 @@
 
               <div class="note-footer">
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <label for="noteFileUpload" class="btn btn-secondary btn-sm" style="cursor:pointer;" title="Upload .txt or .md file">
-                    📁 Upload File
+                  <label for="noteFileUpload" class="btn btn-secondary btn-sm" style="cursor:pointer;" title="Upload .txt, .md, or .pdf file">
+                    📄 Upload File / PDF
                   </label>
-                  <input type="file" id="noteFileUpload" accept=".txt,.md" style="display:none;">
+                  <input type="file" id="noteFileUpload" accept=".txt,.md,.pdf" style="display:none;">
                   <span class="word-count" id="noteWordCount">0 words | 0 chars</span>
                 </div>
                 <button class="btn btn-primary" id="btnSummarize" disabled>✨ Generate Summary</button>
@@ -633,6 +636,12 @@
                   </select>
                 </div>
 
+                <div>
+                  <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:6px;">FastAPI Backend / Tunnel URL</label>
+                  <input type="text" class="input-field" id="settingsInlineBackend" placeholder="http://localhost:8000" style="margin-bottom:8px;">
+                  <span style="font-size:0.75rem; color:var(--text-dim);">Points the app to your local FastAPI SQLite server (or Cloudflare Tunnel / ngrok URL).</span>
+                </div>
+
                 <div style="border-top:1px solid var(--border-subtle); padding-top:16px;">
                   <button class="btn btn-primary" id="btnSaveInlineSettings">Save Settings</button>
                   <button class="btn btn-secondary" id="btnTestInlineKey">Test Connection</button>
@@ -683,6 +692,12 @@
             </select>
           </div>
 
+          <div>
+            <label style="font-size:0.82rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">FastAPI Backend / Tunnel URL</label>
+            <input type="text" class="input-field" id="settingBackendUrl" placeholder="http://localhost:8000">
+            <span style="font-size:0.75rem; color:var(--text-dim); display:block; margin-top:4px;">Connects to SQLite database for Study History tracking.</span>
+          </div>
+
           <div style="display:flex; align-items:center; gap:10px;">
             <input type="checkbox" id="settingSound" checked style="width:18px; height:18px; cursor:pointer;">
             <label for="settingSound" style="font-size:0.9rem; cursor:pointer;">Enable Web Audio sound effects</label>
@@ -716,6 +731,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const inlineKey = document.getElementById('settingsInlineKey');
       const inlineModel = document.getElementById('settingsInlineModel');
+      const inlineBackend = document.getElementById('settingsInlineBackend');
       const btnSaveInline = document.getElementById('btnSaveInlineSettings');
       const btnTestInline = document.getElementById('btnTestInlineKey');
       const btnResetInline = document.getElementById('btnResetInlineData');
@@ -724,12 +740,14 @@
         const s = window.storage.getSettings();
         if (inlineKey) inlineKey.value = s.apiKey || '';
         if (inlineModel) inlineModel.value = s.model || 'gemini-3.8-flash';
+        if (inlineBackend) inlineBackend.value = s.backendUrl || window.BACKEND_URL || 'http://localhost:8000';
       }
 
       btnSaveInline?.addEventListener('click', () => {
         window.storage.saveSettings({
           apiKey: inlineKey.value.trim(),
-          model: inlineModel.value
+          model: inlineModel.value,
+          backendUrl: inlineBackend ? inlineBackend.value.trim() : undefined
         });
         window.app.updateApiStatusBadge();
         window.app.showToast('Settings saved!', 'success');
